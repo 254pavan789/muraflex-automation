@@ -1,0 +1,9 @@
+[project]
+name = "muraflex-automation"
+version = "4.9.0"
+description = "Muraflex Field Measurement PDF -> estimation team GLASS and DOOR sheets"
+requires-python = ">=3.9"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

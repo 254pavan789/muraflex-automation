@@ -1,0 +1,22 @@
+# Render Blueprint - online copy of MURAFLEX AUTOMATION (free plan).
+# Render dashboard > New > Blueprint > pick this repo > Apply. The site URL appears on the service page.
+services:
+  - type: web
+    name: muraflex-automation
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py --no-browser --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: GLASS_PUBLIC          # open to everyone, AI settings locked, Team link = this site
+        value: "1"
+      - key: GLASS_ALLOW
+        value: "*"
+      - key: GLASS_DATA_DIR        # uploaded PDFs / saved edits; cleared when the service restarts
+        value: /tmp/glass_data
+      - key: ANTHROPIC_API_KEY     # optional: AI reading of scanned pages, billed to this key for every visitor
+        sync: false

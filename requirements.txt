@@ -1,0 +1,10 @@
+flask>=3.0
+waitress>=3.0          # multi-user web server for the office network
+pymupdf>=1.24
+openpyxl>=3.1
+pillow>=10.0
+numpy>=1.24
+# OCR - only used for scanned pages (no text inside the PDF)
+rapidocr>=2.0
+onnxruntime>=1.17
+anthropic>=0.40         # optional AI reading of raster pages (Claude); used only when an API key is saved

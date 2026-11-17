@@ -1,0 +1,13 @@
+glass_data/
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+dist/
+*.spec
+venv/
+.venv/
+tests/real_pdfs/*.pdf
+key.txt
+*.key
+ai_settings.json
