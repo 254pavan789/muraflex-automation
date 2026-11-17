@@ -1,6 +1,6 @@
 [project]
 name = "muraflex-automation"
-version = "4.9.0"
+version = "4.9.1"
 description = "Muraflex Field Measurement PDF -> estimation team GLASS and DOOR sheets"
 requires-python = ">=3.9"
 

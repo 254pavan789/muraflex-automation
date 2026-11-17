@@ -96,6 +96,8 @@ def load() -> dict:
         s["model"] = DEFAULTS["model"]
     if s["mode"] not in MODES:
         s["mode"] = DEFAULTS["mode"]
+    if config.PUBLIC and not config.AI_ONLINE:          # online copy: never spend the owner's key for visitors
+        s["api_key"], s["key_source"] = "", ""
     return s
 
 

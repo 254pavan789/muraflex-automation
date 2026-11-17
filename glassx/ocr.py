@@ -11,12 +11,57 @@ _LOCK = threading.Lock()
 log = logging.getLogger("glassx.ocr")
 
 
+def _limits():
+    """Container memory (bytes) and CPU cores from cgroups v2 / v1; None when unlimited or unknown."""
+    mem = cpu = None
+    for f in ("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"):
+        try:
+            v = open(f).read().strip()
+            if v.isdigit() and int(v) < (1 << 50):
+                mem = int(v)
+                break
+        except OSError:
+            pass
+    try:
+        q, per = open("/sys/fs/cgroup/cpu.max").read().split()[:2]
+        if q != "max":
+            cpu = int(q) / int(per)
+    except (OSError, ValueError):
+        try:
+            q = int(open("/sys/fs/cgroup/cpu/cpu.cfs_quota_us").read())
+            per = int(open("/sys/fs/cgroup/cpu/cpu.cfs_period_us").read())
+            cpu = q / per if q > 0 else None
+        except (OSError, ValueError):
+            pass
+    return mem, cpu
+
+
+def disabled_reason() -> str:
+    """'' when OCR may run here, else why not (GLASS_OCR=off, or auto on a server too small for it)."""
+    from . import config
+    if config.OCR_MODE in ("off", "0", "no", "false"):
+        return "OCR is switched off on this server"
+    if config.OCR_MODE in ("on", "1", "yes", "true"):
+        return ""
+    mem, cpu = _limits()
+    if mem is not None and mem < 900 * 1024 * 1024:
+        return f"this server has only {mem // (1024 * 1024)} MB memory (OCR needs about 900 MB)"
+    if cpu is not None and cpu < 0.5:
+        return f"this server has only {cpu:g} CPU (OCR would take minutes per page)"
+    return ""
+
+
 def _load():
     global _ENGINE, _ERR
     if _ENGINE is not None or _ERR is not None:
         return _ENGINE
     with _LOCK:
         if _ENGINE is None and _ERR is None:
+            why = disabled_reason()
+            if why:
+                _ERR = why
+                log.warning("OCR off: %s", why)
+                return None
             try:
                 try:                                   # rapidocr >= 2 (newer, more accurate models)
                     from rapidocr import RapidOCR  # type: ignore

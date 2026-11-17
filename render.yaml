@@ -1,4 +1,4 @@
-# Render Blueprint - online copy of MURAFLEX AUTOMATION (free plan).
+# Render Blueprint - online copy of MURAFLEX AUTOMATION (free plan). Text (vector) FM PDFs only.
 # Render dashboard > New > Blueprint > pick this repo > Apply. The site URL appears on the service page.
 services:
   - type: web
@@ -18,5 +18,6 @@ services:
         value: "*"
       - key: GLASS_DATA_DIR        # uploaded PDFs / saved edits; cleared when the service restarts
         value: /tmp/glass_data
-      - key: ANTHROPIC_API_KEY     # optional: AI reading of scanned pages, billed to this key for every visitor
-        sync: false
+      - key: GLASS_OCR             # free plan (512 MB, 0.1 CPU) cannot OCR scanned pages: say so instead of crashing
+        value: "off"
+# Scanned / picture PDFs need OCR -> use the Hugging Face Space (deploy/huggingface) or the office version.

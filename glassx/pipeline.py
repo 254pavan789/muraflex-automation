@@ -110,6 +110,16 @@ def extract(doc_id: str, pno: int, use_cache: bool = True, ai_mode: str | None =
                     for el in res2["elevations"]:
                         el["notes"].insert(0, "This drawing is a picture, not text - read by OCR, check every value")
                     res, pd = res2, pd2
+    if not res["elevations"] and pd.method == "text" and sum(len(t.t) for t in pd.tokens) < 10:
+        from . import ocr
+        why = ocr.disabled_reason()
+        with pdfdoc.PDF_LOCK:
+            has_pic = bool(d[pno].get_images())
+        if why and has_pic:                                          # scanned / picture page and this server cannot OCR it
+            raster = True
+            res["ocr_off"] = why
+            res["notes"] = list(res.get("notes") or []) + [
+                f"Scanned / picture page - not read: {why}. Use the office version (run_app.bat) for scanned PDFs."]
     _ocr_missing_numbers(d, pno, res)
     res["doors"] = doors.build_doors(res, dict(getattr(pd, "swing", None) or {}, vlines=pd.vlines))
     res["raster"] = raster

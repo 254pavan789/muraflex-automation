@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.9.1 - Online version: scanned PDFs, no API key, sample PDF
+- **Fix: "no elevations" on the online (Render) link.** Scanned / picture pages need OCR, which used 610–760 MB of memory; Render's free server has 512 MB and 0.1 CPU, so the server was killed mid-read and restarted (the uploaded PDF was lost) - on any device, phone or PC. Text (vector) PDFs were not affected.
+  - OCR now reads 800 px tiles instead of 1100 px: the same words are found and peak memory drops ~26% (606 → 445 MB).
+  - `GLASS_OCR=on/off/auto`: *auto* switches OCR off on servers with < 900 MB or < 0.5 CPU. A scanned page then gets a clear note and a message ("scanned page - not read here, use the office version") instead of silently showing 0 elevations. Render is set to `off`.
+  - **Hugging Face Space** files (`deploy/huggingface/`): free 2 CPU / 16 GB server that reads scanned PDFs online.
+- **Online: the Claude API key is ignored** (`ANTHROPIC_API_KEY` on the server is not used) unless `GLASS_AI_ONLINE=1`. Removed from `render.yaml`. The office version is unchanged.
+- **"or try the sample FM PDF"** button on the empty screen (`/api/sample`).
+- 180 tests.
+
 ## 4.9.0 - Works on every screen: phones, tablets, laptops, large monitors
 Reading rules, calculations, Excel output and the server are unchanged. Laptop / desktop (≥ 1101 px wide) keeps the v4.8 layout pixel for pixel.
 - **Phones and portrait tablets (< 900 px):** one screen at a time with a bottom bar **Drawing · Split · Sheet · Check**.

@@ -69,3 +69,47 @@ def test_public_online_mode(monkeypatch):
     assert c.post("/api/ai/settings", json={"api_key": "sk-x"}, headers=hdr, environ_base=env).status_code == 403
     assert c.post("/api/ai/settings", json={"api_key": "sk-x"}, environ_base={"REMOTE_ADDR": "127.0.0.1"}).status_code == 403
     assert c.get("/api/ai/status", headers=hdr, environ_base=env).json["can_edit"] is False
+
+
+def test_online_ignores_api_key_unless_switched_on(monkeypatch):
+    from glassx import ai, config
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-1234")
+    monkeypatch.setattr(config, "PUBLIC", True)
+    monkeypatch.setattr(config, "AI_ONLINE", False)
+    assert ai.load()["api_key"] == "" and not ai.configured()
+    monkeypatch.setattr(config, "AI_ONLINE", True)
+    assert ai.load()["api_key"] == "sk-ant-test-1234"
+    monkeypatch.setattr(config, "PUBLIC", False)
+    assert ai.load()["api_key"] == "sk-ant-test-1234"            # office version unchanged
+
+
+def test_scanned_page_on_server_without_ocr_says_so(tmp_path, monkeypatch):
+    """A tiny online server cannot OCR: the scanned page gets a clear note instead of silently showing nothing."""
+    import pymupdf
+    from glassx import config, ocr, pipeline
+    src = tmp_path / "fm.pdf"
+    synth.build_fm_pdf(str(src), synth.reference_project())
+    d, out = pymupdf.open(str(src)), pymupdf.open()
+    for p in d:
+        np_ = out.new_page(width=p.rect.width, height=p.rect.height)
+        np_.insert_image(np_.rect, pixmap=p.get_pixmap(dpi=60))
+    scan = tmp_path / "scan.pdf"
+    out.save(str(scan))
+    monkeypatch.setattr(config, "OCR_MODE", "off")
+    monkeypatch.setattr(ocr, "_ENGINE", None)
+    monkeypatch.setattr(ocr, "_ERR", None)
+    assert not ocr.available() and "switched off" in ocr.disabled_reason()
+    did = pipeline.store_pdf(scan.read_bytes(), "scan.pdf")
+    r = pipeline.extract(did, 1, use_cache=False)
+    assert r["elevations"] == [] and r["ocr_off"] and any("Scanned" in n for n in r["notes"])
+    monkeypatch.setattr(config, "OCR_MODE", "auto")
+    monkeypatch.setattr(ocr, "_limits", lambda: (512 * 1024 * 1024, 0.1))       # Render free plan
+    assert "512 MB" in ocr.disabled_reason()
+    monkeypatch.setattr(ocr, "_limits", lambda: (16 * 1024 ** 3, 2.0))          # Hugging Face free CPU Space
+    assert ocr.disabled_reason() == ""
+    monkeypatch.setattr(ocr, "_ERR", None)
+
+
+def test_sample_pdf_endpoint():
+    r = create_app().test_client().get("/api/sample")
+    assert r.status_code == 200 and r.data[:4] == b"%PDF" and "Demo" in r.headers["X-Name"]

@@ -199,9 +199,10 @@ def tokens_ocr(page, regions=None) -> list:
     return toks
 
 
-def ocr_tiled(img, tile=1100, overlap=300, regions=None) -> list:
+def ocr_tiled(img, tile=800, overlap=260, regions=None) -> list:
     """OCR engines shrink large images before detection, so small FM labels on a full sheet disappear.
-    Reading overlapping tiles at full resolution keeps them; duplicates in the overlaps are merged."""
+    Reading overlapping tiles at full resolution keeps them; duplicates in the overlaps are merged.
+    800 px tiles: the detector never upscales them (it does below ~736 px) and peak memory is ~25% lower than 1100."""
     H, W = img.shape[:2]
     found = []
     ys = list(range(0, max(H - overlap, 1), tile - overlap)) or [0]

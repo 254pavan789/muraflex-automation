@@ -22,6 +22,10 @@ HOST = os.environ.get("GLASS_HOST", "0.0.0.0")      # 0.0.0.0 = reachable from o
                                                    # 127.0.0.1 = this PC only
 PORT = int(os.environ.get("GLASS_PORT", "8080"))
 PUBLIC = os.environ.get("GLASS_PUBLIC", "").strip().lower() in ("1", "true", "yes")   # online copy, open to everyone
+# online copy: the Claude API key is ignored unless the owner turns AI on for every visitor on purpose
+AI_ONLINE = os.environ.get("GLASS_AI_ONLINE", "").strip().lower() in ("1", "true", "yes")
+# OCR of scanned pages needs ~450 MB RAM and a real CPU core. on / off / auto (auto = off on tiny servers)
+OCR_MODE = os.environ.get("GLASS_OCR", "auto").strip().lower()
 
 # Domain constants ------------------------------------------------------------------
 BM_RANGE = (15.0, 95.0)          # an upper / lower benchmark reading is always inside this range (inches)

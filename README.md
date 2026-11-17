@@ -1,4 +1,4 @@
-# MURAFLEX AUTOMATION  ·  v4.9.0
+# MURAFLEX AUTOMATION  ·  v4.9.1
 
 **Muraflex Field Measurement PDF → the estimation team's GLASS and DOOR sheets, in seconds.**
 
@@ -16,7 +16,7 @@ The estimator's job becomes reviewing the values instead of typing them.
 | | |
 |---|---|
 | Speed | **~8 ms per page** for a text PDF (2,994 pages in 25 s); scanned / picture pages use OCR (~5–10 s/page) |
-| Verified | **177 automated tests**, including **3 real project PDFs** (14005, 14075, 14092; every elevation checked against the sheets) and fuzz tests on **5 sheet families**: 14002 style, 14005 style, 14092 style (lowers under the title, one upper, BY OTHERS), ADMIN style (hyphen fractions, stacked lites) and 13871 style (uppers equal to lowers, notes naming elevations, narrow sidelites). The families cover page text, Bluebeam mark-ups and rotated CAD plots. |
+| Verified | **180 automated tests**, including **3 real project PDFs** (14005, 14075, 14092; every elevation checked against the sheets) and fuzz tests on **5 sheet families**: 14002 style, 14005 style, 14092 style (lowers under the title, one upper, BY OTHERS), ADMIN style (hyphen fractions, stacked lites) and 13871 style (uppers equal to lowers, notes naming elevations, narrow sidelites). The families cover page text, Bluebeam mark-ups and rotated CAD plots. |
 | Excel check | Every stored TOTAL / Difference / JUDGEMENT / Fraction is checked against a LibreOffice recalculation of the same formulas (0 mismatches) |
 | Runs | On one office PC; everyone on the office network uses it from their browser (Team link). No cloud and no internet needed after install |
 
@@ -75,22 +75,32 @@ The same Team link works on **phones, tablets, laptops and big monitors** (Chrom
 * **Export** downloads the `.xlsx` to the phone / tablet (Downloads / Files app).
 * Your chosen view, divider position and mode are remembered on each device.
 
-## Online version (Render) - a link anyone can open
+## Online version - a link anyone can open
 
-The repo holds a Render Blueprint (`render.yaml`), the same way as Lumen Store. One-time setup:
+Two free hosts are ready in this repo. **Use Hugging Face for the team link**: it reads scanned / picture PDFs too.
 
-1. Go to **https://dashboard.render.com** and sign in with GitHub.
-2. **New** > **Blueprint** > choose the **muraflex-automation** repo > **Apply**. (If the repo is not listed: *Configure GitHub account* > give Render access to it.)
-3. Wait for the first build (~5 min). The link is on the service page, e.g. `https://muraflex-automation-xxxx.onrender.com`. Share it with anyone, on any phone, tablet or PC.
+| | Hugging Face Space (recommended) | Render (free) |
+|---|---|---|
+| Text (vector) FM PDFs | yes | yes |
+| Scanned / picture FM PDFs (OCR) | **yes** (~20–40 s per page) | **no** - 512 MB / 0.1 CPU is too small; the app says "scanned page - not read" |
+| Sleeps when idle | after 48 h | after 15 min (first visit then ~1 min) |
+| Files | `deploy/huggingface/Dockerfile` + `README.md` | `render.yaml` |
 
-Every push to `main` redeploys automatically.
+**Hugging Face Space - one-time setup**
+1. Sign up / sign in at **https://huggingface.co** (free).
+2. Open **https://huggingface.co/new-space**. Space name `muraflex-automation`, licence any, **SDK: Docker → Blank**, hardware **CPU basic (free)**, **Public**. Click **Create Space**.
+3. In the new Space: **Files** → **+ Contribute** → **Upload files** → drop `deploy/huggingface/Dockerfile` and `deploy/huggingface/README.md` from this repo (replace the existing README.md) → **Commit changes to main**.
+4. The Space builds (~5–8 min; *Logs* shows progress). When it says **Running**, the link is `https://<your-hf-name>-muraflex-automation.hf.space`. Share that.
+5. **After every GitHub update:** Space → **Settings** → **Factory rebuild** (the build always pulls the latest GitHub code).
+
+**Render:** Render dashboard > **New** > **Blueprint** > this repo > **Apply**. Every push to `main` redeploys.
 
 **What is different online** (`GLASS_PUBLIC=1`)
 * Anyone with the link can use it; there is no office-network check.
-* **AI settings are locked**, so nobody on the internet can set or use an API key. To turn on AI reading for everyone, set `ANTHROPIC_API_KEY` under the service's *Environment* tab (every visitor's AI reads are then billed to that key).
-* The **Team link** button shows the site address.
-* Free plan: the site sleeps after 15 min idle (the first visit then takes ~1 min), and uploaded PDFs and saved edits are cleared when it restarts. Export your Excel files before you leave.
-* Uploaded PDFs sit on Render's server while the service runs. Use the office version (`run_app.bat`) for confidential client drawings.
+* **No AI reading online.** The Claude API key is ignored, even if `ANTHROPIC_API_KEY` is set on the server, so visitors never spend your key. (To switch it on on purpose for everyone: `GLASS_AI_ONLINE=1` plus the key.) AI settings are locked.
+* The **Team link** button shows the site address. **"or try the sample FM PDF"** on the empty screen opens the demo PDF, so anyone can try the app without an FM PDF.
+* Uploaded PDFs and saved edits are cleared when the server restarts. Export your Excel files before you leave.
+* Uploaded PDFs sit on the host's server while it runs. Use the office version (`run_app.bat`) for confidential client drawings.
 
 ## 2. Using the app
 

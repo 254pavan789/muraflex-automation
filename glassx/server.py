@@ -77,6 +77,19 @@ def create_app() -> Flask:
         return jsonify({"shared": lan, "urls": netinfo.share_urls(port) if lan else [], "port": port,
                         "host": netinfo.host_names()[:1], "you": request.remote_addr})
 
+    @app.get("/api/sample")
+    def api_sample():
+        """The demo FM PDF that ships in samples/ (the 'try the sample' button)."""
+        d = os.path.join(config.BASE_DIR, "samples")
+        names = sorted(n for n in os.listdir(d) if n.lower().endswith(".pdf")) if os.path.isdir(d) else []
+        name = next((n for n in names if n.lower().startswith("demo")), names[0] if names else None)
+        if not name:
+            abort(404, "no sample PDF")
+        r = send_file(os.path.join(d, name), mimetype="application/pdf")
+        from urllib.parse import quote
+        r.headers["X-Name"] = quote(name)
+        return r
+
     @app.post("/api/open")
     def api_open():
         f = request.files.get("file")

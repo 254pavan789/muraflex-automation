@@ -732,6 +732,7 @@ table.dg.xl.cx td{padding:3px 2px}table.dg.xl.cx td input[type=text]{padding:3px
         <h2 id="dropH">Drop Field Measurement PDFs here</h2>
         <p id="dropP"></p>
         <button class="btn pri" id="bOpen2">Choose PDF(s)</button>
+        <button class="btn ghost sm" id="bSample" style="margin-top:8px" title="Open the demo FM PDF that ships with the app">or try the sample FM PDF</button>
         <div class="steps"><div class="step"><b>1</b>Open PDF</div><div class="step"><b>2</b>Review flagged values</div><div class="step"><b>3</b>Export <span class="shName">GLASS</span> + DOOR sheet</div></div>
         <div class="kb">Vector, scanned and raster PDFs &middot; several at once &middot; <kbd>Ctrl</kbd>+<kbd>O</kbd></div>
       </div></div>
@@ -919,7 +920,7 @@ function renderTabs(){const ids=Object.keys(FILES);
 async function readPage(f,p,fresh,useAI){
   f.done[p]='busy';if(f.doc===CUR)renderRail();
   try{const r=await api('/api/extract',{doc_id:f.doc,page:p,fresh:!!fresh,ai:!!useAI});
-    f.meth=f.meth||{};f.meth[p]=r.method;f.ras=f.ras||{};f.ras[p]=!!r.raster||/ocr/.test(r.method||'');f.aierr=f.aierr||{};f.aierr[p]=r.ai_error||'';if(r.ai_error&&useAI)toast('AI: '+r.ai_error,6000);
+    f.ocroff=f.ocroff||{};f.ocroff[p]=r.ocr_off||'';f.meth=f.meth||{};f.meth[p]=r.method;f.ras=f.ras||{};f.ras[p]=!!r.raster||/ocr/.test(r.method||'');f.aierr=f.aierr||{};f.aierr[p]=r.ai_error||'';if(r.ai_error&&useAI)toast('AI: '+r.ai_error,6000);
     f.els=f.els.filter(e=>e.page!==p).concat(r.elevations.map((e,i)=>({...e,uid:p+'-'+i})));
     f.doors=f.doors.filter(d=>d.page!==p).concat((r.doors||[]).map((d,i)=>({...d,uid:'d'+p+'-'+i})));
     f.notes[p]=r.notes||[];f.cands[p]=r.candidates||[];f.done[p]=r.elevations.length?'ok':'none';f.ms+=r.ms||0;
@@ -934,6 +935,8 @@ async function readAll(f){
     READER.page(f,p);await readPage(f,p);READER.after(f,p);}
   pr.firstElementChild.style.width='100%';setTimeout(()=>{pr.style.display='none';pt.style.display='none';},400);
   f.busy=false;f.wall=performance.now()-t0;renderTabs();READER.end(f);
+  const off=Object.values(f.ocroff||{}).filter(Boolean);
+  if(off.length)setTimeout(()=>toast(`${f.name}: ${off.length} scanned / picture page(s) could not be read here - ${off[0]}. Use the office version for scanned PDFs.`,9000),2700);
   if(f.doc===CUR){$('#bReread').disabled=false;$('#bAIread').disabled=!(AI&&AI.on);updateStats();renderList();const first=DOOR()?f.doors[0]:gEls(f)[0];if(first&&first.page!==f.page)showPage(first.page);}
   if(DOOR()){const n=f.doors.length,pv=f.doors.filter(d=>d.type!=='Sliding').length;
     toast(n?`${f.name}: ${n} door(s) - ${pv} pivot, ${n-pv} sliding`:`${f.name}: no doors found${f.els.length?' (glass only - see the GLASS module)':' - is this an FM sheet?'}`,3500);}
@@ -1223,6 +1226,9 @@ async function exportAll(){const fs=Object.values(FILES).filter(f=>!f.busy);
 /* ---------- wiring ---------- */
 const VERSION='{{VERSION}}';
 $('#bOpen').onclick=$('#bOpen2').onclick=()=>$('#file').click();
+$('#bSample').onclick=async()=>{try{const r=await fetch('/api/sample');if(!r.ok)throw new Error(r.statusText);
+  const n=decodeURIComponent((r.headers.get('X-Name')||'Demo Project FM - SAMPLE.pdf'));openFiles([new File([await r.blob()],n,{type:'application/pdf'})]);}
+  catch(e){toast('Sample not available: '+e.message,4000);}};
 $('#file').onchange=e=>{openFiles([...e.target.files]);e.target.value='';};
 $('#bExport').onclick=exportCur;$('#bExportAll').onclick=exportAll;$('#bUndo').onclick=undo;$('#bRedo').onclick=redo;
 $('#bHome').onclick=$('#brand').onclick=goHome;
